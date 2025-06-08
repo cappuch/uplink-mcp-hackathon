@@ -1,0 +1,11 @@
+huggingface_hub
+gradio
+python-dotenv
+rss-parser
+tqdm
+requests
+numpy
+feedparser
+fastapi
+uvicorn
+gradio[mcp]
