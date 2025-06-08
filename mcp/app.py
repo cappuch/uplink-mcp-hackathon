@@ -1,5 +1,28 @@
 import gradio as gr
 from requests import get
+import requests
+def scrape_endpoint(
+    url: str,
+) -> dict:
+    """
+    Scrape a web page, extract main content, and summarize.
+    Args:
+        url: URL to scrape
+    Returns:
+        Extracted and summarized main content
+    """
+    try:
+        resp = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
+        if resp.status_code != 200 or any(x in resp.text.lower() for x in ["cloudflare", "rate limit", "captcha"]):
+            return {"error": "Blocked by site or rate limited.", "url": url}
+        # Lazy import to avoid circular import issues
+        from utils.news_content_strip import extract_main_content
+        from utils.models import extract
+        main_content = extract_main_content(resp.text)
+        summary = extract(main_content)
+        return {"url": url, "summary": summary}
+    except Exception as e:
+        return {"error": str(e), "url": url}
 import os
 
 base_url = os.getenv("base_url", "http://localhost:8001")
@@ -100,6 +123,20 @@ with gr.Blocks(title="Uplink") as demo:
             fn=search_endpoint,
             inputs=[query, num_results, start, site, date_restrict],
             outputs=output
+        )
+
+    with gr.Tab("Web Scrape"):
+        with gr.Row():
+            with gr.Column():
+                scrape_url = gr.Textbox(label="URL to Scrape", placeholder="https://example.com")
+                scrape_btn = gr.Button("🌐 Scrape")
+            with gr.Column():
+                scrape_output = gr.JSON(label="Scraped Content")
+
+        scrape_btn.click(
+            fn=scrape_endpoint,
+            inputs=[scrape_url],
+            outputs=scrape_output
         )
 
     with gr.Tab("News Search"):
