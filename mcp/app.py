@@ -4,7 +4,7 @@ import requests
 import os
 
 base_url = os.getenv("base_url", "http://localhost:8001")
-API_KEY = os.getenv("API_KEY", "hackathon-2025")
+API_KEY = os.getenv("API_KEY")
 
 headers = {
     "X-API-Key": API_KEY
@@ -101,8 +101,8 @@ with gr.Blocks(title="Uplink") as demo:
         with gr.Row():
             with gr.Column():
                 query = gr.Textbox(label="Search Query", placeholder="Type your search here...")
-                num_results = gr.Slider(minimum=1, maximum=5, value=5, label="Number of Results")
-                start = gr.Slider(minimum=1, maximum=100, value=1, label="Starting Index")
+                num_results = gr.Slider(minimum=1, maximum=5, value=5, step=1, label="Number of Results")
+                start = gr.Slider(minimum=1, maximum=100, value=1, step=1, label="Starting Index")
                 site = gr.Textbox(label="Restrict to Site (optional)", placeholder="e.g. wikipedia.org")
                 date_restrict = gr.Dropdown(
                     choices=[None, "d1", "w1", "m1"],
@@ -138,7 +138,7 @@ with gr.Blocks(title="Uplink") as demo:
         with gr.Row():
             with gr.Column():
                 news_query = gr.Textbox(label="News Search Query", placeholder="Type your news topic...")
-                news_num_results = gr.Slider(minimum=1, maximum=10, value=5, label="Number of Results")
+                news_num_results = gr.Slider(minimum=1, maximum=10, value=5, step=1, label="Number of Results")
                 news_search_btn = gr.Button("📰 Search News")
             with gr.Column():
                 news_output = gr.JSON(label="News Results")
