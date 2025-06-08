@@ -11,7 +11,6 @@ load_dotenv()
 
 app = modal.App("news-rss-scanner")
 
-API_BASE_URL = os.getenv('API_BASE_URL', 'http://localhost:8000/api')
 MAX_RETRIES = 3
 RETRY_DELAY = 1
 
@@ -37,6 +36,7 @@ def fetch_content(url):
 
 def find_record_by_url_api(url):
     """Check if a record exists using the API with retry logic"""
+    API_BASE_URL = os.getenv('DB_URL', '')
     headers = {"x-api-key": os.getenv('DB_API_KEY', '')}
     for attempt in range(MAX_RETRIES):
         try:
@@ -53,6 +53,7 @@ def find_record_by_url_api(url):
 
 def write_record_api(title, url, content, embedding, source, bias):
     """Write a record using the API with retry logic"""
+    API_BASE_URL = os.getenv('DB_URL', '')
     headers = {"x-api-key": os.getenv('DB_API_KEY', '')}
     data = {
         "title": title,
