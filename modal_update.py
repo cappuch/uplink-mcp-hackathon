@@ -11,7 +11,7 @@ load_dotenv()
 
 app = modal.App("news-rss-scanner")
 
-API_BASE_URL = "http://79.97.198.96:1337"
+API_BASE_URL = os.getenv('API_BASE_URL', 'http://localhost:8000/api')
 MAX_RETRIES = 3
 RETRY_DELAY = 1
 
