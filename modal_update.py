@@ -1,46 +1,59 @@
 import modal
-import asyncio
 from utils.rss_parse import get_rss
 from utils.mappings import mappings
 from utils.news_content_strip import extract_main_content
 from utils.models import embed_text, extract, bias
-import aiohttp
+import requests
+import time
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 app = modal.App("news-rss-scanner")
 
-API_BASE_URL = "http://localhost:8000"
+API_BASE_URL = "http://79.97.198.96:1337"
 MAX_RETRIES = 3
 RETRY_DELAY = 1
 
 image = modal.Image.debian_slim().pip_install([
-    "aiohttp",
     "feedparser",
     "beautifulsoup4",
     "requests",
-    "tqdm"
-])
+    "tqdm",
+    "rss-parser",
+    "huggingface_hub",
+    "python-dotenv",
+    "numpy"
+]).copy_local_dir("./utils", "/root/utils")
 
-async def fetch_content(session, url):
-    async with session.get(url, timeout=10) as resp:
-        return await resp.text()
+def fetch_content(url):
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        return response.text
+    except Exception as e:
+        print(f"Error fetching content from {url}: {e}")
+        return ""
 
-async def find_record_by_url_api(session, url):
+def find_record_by_url_api(url):
     """Check if a record exists using the API with retry logic"""
+    headers = {"x-api-key": os.getenv('DB_API_KEY', '')}
     for attempt in range(MAX_RETRIES):
         try:
-            async with session.get(f"{API_BASE_URL}/news/find", params={"url": url}, timeout=30) as resp:
-                return resp.status == 200
-        except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+            response = requests.get(f"{API_BASE_URL}/news/find", params={"url": url}, headers=headers, timeout=30)
+            return response.status_code == 200
+        except requests.RequestException as e:
             if attempt == MAX_RETRIES - 1:
                 print(f"Failed to check record existence after {MAX_RETRIES} attempts: {e}")
                 return False
-            await asyncio.sleep(RETRY_DELAY * (attempt + 1))
+            time.sleep(RETRY_DELAY * (attempt + 1))
         except Exception as e:
             print(f"Unexpected error checking record: {e}")
             return False
 
-async def write_record_api(session, title, url, content, embedding, source, bias):
+def write_record_api(title, url, content, embedding, source, bias):
     """Write a record using the API with retry logic"""
+    headers = {"x-api-key": os.getenv('DB_API_KEY', '')}
     data = {
         "title": title,
         "url": url,
@@ -52,93 +65,81 @@ async def write_record_api(session, title, url, content, embedding, source, bias
     
     for attempt in range(MAX_RETRIES):
         try:
-            async with session.post(f"{API_BASE_URL}/news/write", json=data, timeout=30) as resp:
-                if resp.status == 200:
-                    return True
-                else:
-                    error_text = await resp.text()
-                    print(f"API returned status {resp.status}: {error_text}")
-                    return False
-        except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+            response = requests.post(f"{API_BASE_URL}/news/write", json=data, headers=headers, timeout=30)
+            if response.status_code == 200:
+                return True
+            else:
+                print(f"API returned status {response.status_code}: {response.text}")
+                return False
+        except requests.RequestException as e:
             if attempt == MAX_RETRIES - 1:
                 print(f"Failed to write record after {MAX_RETRIES} attempts: {e}")
                 return False
             print(f"Attempt {attempt + 1} failed, retrying in {RETRY_DELAY * (attempt + 1)}s: {e}")
-            await asyncio.sleep(RETRY_DELAY * (attempt + 1))
+            time.sleep(RETRY_DELAY * (attempt + 1))
         except Exception as e:
             print(f"Unexpected error writing to API: {e}")
             return False
 
-async def process_entry(entry, feed_name, session, semaphore):
-    async with semaphore:
-        try:
-            url = str(entry.links[0].content if hasattr(entry.links[0], "content") else entry.links[0])
-            if await find_record_by_url_api(session, url):
-                return
-            content = await fetch_content(session, url) if entry.links else ""
-            if not content:
-                print(f"No content found for {entry.title.content} in {feed_name}")
-                return
-            content = extract_main_content(content)
-            content = extract(content)
-            
-            success = await write_record_api(
-                session,
-                title=str(entry.title.content),
-                url=url,
-                content=str(content),
-                embedding=embed_text(content),
-                source=str(feed_name),
-                bias=str(bias(content))
-            )
-            
-            if success:
-                print(f"Added new article: {entry.title.content} ({url})")
-            else:
-                print(f"Failed to write article: {entry.title.content} ({url})")
-        except Exception as e:
-            print(f"Error processing entry {entry.title.content} from {feed_name}: {e}")
+def process_entry(entry, feed_name):
+    try:
+        url = str(entry.links[0].content if hasattr(entry.links[0], "content") else entry.links[0])
+        if find_record_by_url_api(url):
+            return
+        content = fetch_content(url) if entry.links else ""
+        if not content:
+            print(f"No content found for {entry.title.content} in {feed_name}")
+            return
+        content = extract_main_content(content)
+        content = extract(content)
+        
+        success = write_record_api(
+            title=str(entry.title.content),
+            url=url,
+            content=str(content),
+            embedding=embed_text(content),
+            source=str(feed_name),
+            bias=str(bias(content))
+        )
+        
+        if success:
+            print(f"Added new article: {entry.title.content} ({url})")
+        else:
+            print(f"Failed to write article: {entry.title.content} ({url})")
+    except Exception as e:
+        print(f"Error processing entry {entry.title.content} from {feed_name}: {e}")
 
-async def process_feed(feed_name, feeds):
-    semaphore = asyncio.Semaphore(4)
-    async with aiohttp.ClientSession() as session:
-        for feed_url in feeds:
-            rss = get_rss(feed_url)
-            entries = rss.channel.items if rss else []
-            tasks = [
-                process_entry(entry, feed_name, session, semaphore)
-                for entry in entries
-            ]
-            await asyncio.gather(*tasks)
+def process_feed(feed_name, feeds):
+    for feed_url in feeds:
+        print(f"Processing feed: {feed_url}")
+        rss = get_rss(feed_url)
+        entries = rss.channel.items if rss else []
+        for entry in entries:
+            process_entry(entry, feed_name)
 
-# Scheduled function that runs every 5 minutes
 @app.function(
     image=image,
-    schedule=modal.Period(minutes=5),
+    schedule=modal.Period(minutes=15),
+    secrets=[modal.Secret.from_name("HF_TOKEN")]
 )
 def scheduled_rss_scan():
     """Scheduled RSS scanning function"""
     print("Starting scheduled RSS scan...")
     
-    async def scan():
-        tasks = [process_feed(feed_name, feeds) for feed_name, feeds in mappings.items()]
-        await asyncio.gather(*tasks)
-        print("Scheduled RSS scan complete.")
+    for feed_name, feeds in mappings.items():
+        process_feed(feed_name, feeds)
     
-    asyncio.run(scan())
+    print("Scheduled RSS scan complete.")
 
-# Optional: Manual trigger function
-@app.function(image=image)
+@app.function(image=image, secrets=[modal.Secret.from_name("HF_TOKEN")])
 def manual_rss_scan():
     """Manually triggered RSS scanning function"""
     print("Starting manual RSS scan...")
     
-    async def scan():
-        tasks = [process_feed(feed_name, feeds) for feed_name, feeds in mappings.items()]
-        await asyncio.gather(*tasks)
-        print("Manual RSS scan complete.")
+    for feed_name, feeds in mappings.items():
+        process_feed(feed_name, feeds)
     
-    asyncio.run(scan())
+    print("Manual RSS scan complete.")
 
 # For local testing
 if __name__ == "__main__":
