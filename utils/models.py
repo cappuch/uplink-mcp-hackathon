@@ -26,6 +26,7 @@ def completion(messages: list) -> dict:
     result = extraction_client.chat.completions.create(
         model=extraction_model,
         messages=messages,
+        temperature=0.1
     )
     return result.choices[0].message
 
