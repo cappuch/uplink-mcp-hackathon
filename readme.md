@@ -1,12 +1,25 @@
 # uplink - real-time information for llms
 uplink brings real-time information to llms, as if the llm were trained 5 minutes ago
+(this isnt a slop project)
 
-uplink features:
+public instance @[huggingface spaces](https://huggingface.co/spaces/aldigobbler/uplink-mcp)
+
+### uplink features:
 - backend (sqlite3 server running at home, where a modal cron job sends the new news articles back, and google-searching has caching (because, why not?))
 - mcp (for your every day llms)
 - agent for using this stuff
 
+modal for scheduled scraping, mistral models behind the scenes, and huggingface inference api.
+
 ![backend info](assets/info.png)
+
+## what does it *exactly* do?
+
+uplink acts as a mcp server/array of tools for language models to learn off of, from real time data sources like the news, and the web.
+there's 3 endpoints that are public, which are:
+- scrape webpage (turns a webpage into markdown)
+- search (searches)
+- search news (searches well, the news)
 
 ## what does it use (+ why)?
 - conversion llm: `mistralai/Mistral-Small-3.1-24B-Instruct-2503`
@@ -21,7 +34,6 @@ uplink features:
     - nice and cheap (i'm paying for it myself) - also, has amazing tool call capabilities
 
 (notice how i'm using mostly mistral plz)
-(this isnt a slop project)
 
 ## security?
 pretty pathetic to be honest, but it's a hackathon. trying to keep everything hidden away.
