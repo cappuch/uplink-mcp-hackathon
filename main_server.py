@@ -40,6 +40,8 @@ def scrape_endpoint(
         Extracted and summarized main content
     """
     try:
+        if not url.startswith(("http://", "https://")):
+            raise HTTPException(status_code=400, detail="Invalid URL format. Must start with http:// or https://")
         resp = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
         if resp.status_code != 200 or any(x in resp.text.lower() for x in ["cloudflare", "rate limit", "captcha"]):
             raise HTTPException(status_code=429, detail="Blocked by site or rate limited.")

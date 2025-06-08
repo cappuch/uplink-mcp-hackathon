@@ -1,28 +1,6 @@
 import gradio as gr
 from requests import get
 import requests
-def scrape_endpoint(
-    url: str,
-) -> dict:
-    """
-    Scrape a web page, extract main content, and summarize.
-    Args:
-        url: URL to scrape
-    Returns:
-        Extracted and summarized main content
-    """
-    try:
-        resp = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
-        if resp.status_code != 200 or any(x in resp.text.lower() for x in ["cloudflare", "rate limit", "captcha"]):
-            return {"error": "Blocked by site or rate limited.", "url": url}
-        # Lazy import to avoid circular import issues
-        from utils.news_content_strip import extract_main_content
-        from utils.models import extract
-        main_content = extract_main_content(resp.text)
-        summary = extract(main_content)
-        return {"url": url, "summary": summary}
-    except Exception as e:
-        return {"error": str(e), "url": url}
 import os
 
 base_url = os.getenv("base_url", "http://localhost:8001")
@@ -93,6 +71,23 @@ def search_news_endpoint(
         return response.json()
     except Exception as e:
         return {"error": str(e), "query": q, "results": [], "count": 0}
+    
+def scrape_endpoint(url: str) -> dict:
+    """
+    Scrape the content of a given URL, and return it as a nice markdown formatted dictionary.
+
+    Args:
+        url: The URL to scrape
+
+    Returns:
+        Scraped markdown as a dictionary
+    """
+    try:
+        response = get(f"{base_url}/scrape", params={"url": url}, headers=headers)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        return {"error": str(e), "url": url, "content": ""}
 
 with gr.Blocks(title="Uplink") as demo:
     gr.Markdown(
