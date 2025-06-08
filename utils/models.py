@@ -4,26 +4,26 @@ from dotenv import load_dotenv
 from utils.prompts import EXTRACT_PROMPT, BIAS_PROMPT, RANDOM_EXTRACT_PROMPT
 import numpy as np
 import re
+from openai import OpenAI
 
 load_dotenv()
 
 api_key = os.environ.get("HF_TOKEN")
 embedding_model = os.environ.get("EMBEDDING_MODEL")
 extraction_model = os.environ.get("EXTRACTION_MODEL")
-extraction_model_provider = os.environ.get("EXTRACTION_MODEL_PROVIDER", "auto")
 
 embed_client = InferenceClient(
     provider="auto",
     api_key=api_key,
 )
 
-extraction_client = InferenceClient(
-    provider=extraction_model_provider,
-    api_key=os.environ["HF_TOKEN"],
+client = OpenAI(
+    base_url="https://api.studio.nebius.com/v1/",
+    api_key=os.environ.get("NEBIUS_API_KEY")
 )
 
 def completion(messages: list) -> dict:
-    result = extraction_client.chat.completions.create(
+    result = client.chat.completions.create(
         model=extraction_model,
         messages=messages,
         temperature=0.1
