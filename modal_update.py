@@ -120,7 +120,8 @@ def process_feed(feed_name, feeds):
 @app.function(
     image=image,
     schedule=modal.Period(minutes=15),
-    secrets=[modal.Secret.from_name("HF_TOKEN")]
+    secrets=[modal.Secret.from_name("HF_TOKEN")],
+    timeout=modal.Duration(minutes=15)
 )
 def scheduled_rss_scan():
     """Scheduled RSS scanning function"""
@@ -131,7 +132,7 @@ def scheduled_rss_scan():
     
     print("Scheduled RSS scan complete.")
 
-@app.function(image=image, secrets=[modal.Secret.from_name("HF_TOKEN")])
+@app.function(image=image, secrets=[modal.Secret.from_name("HF_TOKEN")], timeout=modal.Duration(minutes=15))
 def manual_rss_scan():
     """Manually triggered RSS scanning function"""
     print("Starting manual RSS scan...")
