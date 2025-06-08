@@ -9,7 +9,7 @@ public instance @[huggingface spaces](https://huggingface.co/spaces/aldigobbler/
 - mcp (for your every day llms)
 - agent for using this stuff
 
-modal for scheduled scraping, mistral models behind the scenes, and huggingface inference api.
+modal for scheduled scraping, mistral models behind the scenes, and huggingface inference api. db and fastapi server run on my pi at home.
 
 ![backend info](assets/info.png)
 

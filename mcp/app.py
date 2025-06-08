@@ -48,14 +48,14 @@ def search_endpoint(
 
 def search_news_endpoint(
         q: str,
-        num: int = 10,
+        num: int = 5,
 ) -> dict:
     """
     Search news articles, similar to Google News.
 
     Args:
         q: Search query
-        num: Number of results to return (default 10)
+        num: Number of results to return (default 5) [maximum of 5]
 
     Returns:
         News search results as a dictionary
@@ -138,7 +138,7 @@ with gr.Blocks(title="Uplink") as demo:
         with gr.Row():
             with gr.Column():
                 news_query = gr.Textbox(label="News Search Query", placeholder="Type your news topic...")
-                news_num_results = gr.Slider(minimum=1, maximum=10, value=5, step=1, label="Number of Results")
+                news_num_results = gr.Slider(minimum=1, maximum=5, value=5, step=1, label="Number of Results")
                 news_search_btn = gr.Button("📰 Search News")
             with gr.Column():
                 news_output = gr.JSON(label="News Results")
