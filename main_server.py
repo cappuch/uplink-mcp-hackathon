@@ -44,7 +44,7 @@ def scrape_endpoint(
             raise HTTPException(status_code=400, detail="Invalid URL format. Must start with http:// or https://")
         resp = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
         main_content = extract_main_content(resp.text)
-        summary = extract(main_content)
+        summary = extract(main_content, mode="random")
         return {"url": url, "summary": summary}
     except Exception as e:
         raise HTTPException(status_code=500, detail="An error occured. We dont know what happened!")

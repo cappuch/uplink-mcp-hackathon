@@ -1,7 +1,7 @@
 import os
 from huggingface_hub import InferenceClient
 from dotenv import load_dotenv
-from utils.prompts import EXTRACT_PROMPT, BIAS_PROMPT
+from utils.prompts import EXTRACT_PROMPT, BIAS_PROMPT, RANDOM_EXTRACT_PROMPT
 import numpy as np
 import re
 
@@ -44,11 +44,17 @@ def embed_text(text: str) -> list:
         else:
             return list(result)
 
-def extract(text: str) -> str:
-    messages = [
-        {"role": "system", "content": EXTRACT_PROMPT},
-        {"role": "user", "content": text},
-    ]
+def extract(text: str, mode: str = None) -> str:
+    if mode == "random":
+        messages = [
+            {"role": "system", "content": RANDOM_EXTRACT_PROMPT},
+            {"role": "user", "content": text}
+        ]
+    else:
+        messages = [
+            {"role": "system", "content": EXTRACT_PROMPT},
+            {"role": "user", "content": text},
+        ]
     result = completion(messages)
     content = result.content
     content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL)
