@@ -43,13 +43,11 @@ def scrape_endpoint(
         if not url.startswith(("http://", "https://")):
             raise HTTPException(status_code=400, detail="Invalid URL format. Must start with http:// or https://")
         resp = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
-        if resp.status_code != 200 or any(x in resp.text.lower() for x in ["cloudflare", "rate limit", "captcha"]):
-            raise HTTPException(status_code=429, detail="Blocked by site or rate limited.")
         main_content = extract_main_content(resp.text)
         summary = extract(main_content)
         return {"url": url, "summary": summary}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An error occured. We dont know what happened!")
 
 @app.get("/search")
 def search_endpoint(
