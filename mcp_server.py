@@ -2,7 +2,7 @@ import gradio as gr
 from requests import get
 import os
 
-base_url = "http://127.0.0.1:8001"
+base_url = os.getenv("base_url", "http://localhost:8001")
 API_KEY = os.getenv("API_KEY", "hackathon-2025")
 
 headers = {
