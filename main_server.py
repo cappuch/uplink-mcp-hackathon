@@ -5,6 +5,9 @@ from search_server.news_search import news_search
 from search_server.cache import search_cache
 from search_server.globals import get_request_count
 import os
+import requests
+from utils.news_content_strip import extract_main_content
+from utils.models import extract
 
 app = FastAPI(title="uplink", version="1.0.0")
 
@@ -23,6 +26,28 @@ def verify_api_key(x_api_key: str = Header(None)):
 def root():
     """Health check endpoint."""
     return {"message": "uplink is alive and well -- mikus"}
+
+@app.get("/scrape")
+def scrape_endpoint(
+    url: str = Query(..., description="URL to scrape"),
+    authenticated: bool = Depends(verify_api_key)
+) -> Dict[str, Any]:
+    """
+    Scrape a web page, extract main content, and summarize.
+    Args:
+        url: URL to scrape
+    Returns:
+        Extracted and summarized main content
+    """
+    try:
+        resp = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
+        if resp.status_code != 200 or any(x in resp.text.lower() for x in ["cloudflare", "rate limit", "captcha"]):
+            raise HTTPException(status_code=429, detail="Blocked by site or rate limited.")
+        main_content = extract_main_content(resp.text)
+        summary = extract(main_content)
+        return {"url": url, "summary": summary}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/search")
 def search_endpoint(
