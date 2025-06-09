@@ -30,10 +30,10 @@ there's 3 endpoints that are public, which are:
     - easiest thing to use, and never changed
 - search: google's custom search api with rotating keys
     - i'm broke, i can't afford requests
-- agent model: `mistral-medium-2505`
-    - nice and cheap (i'm paying for it myself) - also, has amazing tool call capabilities
+- agent model: `Qwen 2.5-72B-Instruct`
+    - on nebius. works really well
 
-(notice how i'm using mostly mistral plz)
+(notice how i'm using mistral plz)
 
 ## security?
 pretty pathetic to be honest, but it's a hackathon. trying to keep everything hidden away.
