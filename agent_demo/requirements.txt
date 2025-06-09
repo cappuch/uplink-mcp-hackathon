@@ -1,0 +1,4 @@
+gradio
+openai
+gradio_client
+python-dotenv
