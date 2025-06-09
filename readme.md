@@ -2,7 +2,9 @@
 uplink brings real-time information to llms, as if the llm were trained 5 minutes ago
 (this isnt a slop project)
 
-public instance @[huggingface spaces](https://huggingface.co/spaces/aldigobbler/uplink-mcp)
+public agent demo @[huggingface spaces](https://huggingface.co/spaces/Agents-MCP-Hackathon/uplink-mcp-demo-agent)
+
+puiblic mcp demo @[huggingface spaces](https://huggingface.co/spaces/Agents-MCP-Hackathon/uplink-mcp)
 
 ### uplink features:
 - backend (sqlite3 server running at home, where a modal cron job sends the new news articles back, and google-searching has caching (because, why not?))
