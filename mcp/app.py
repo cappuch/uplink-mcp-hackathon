@@ -94,6 +94,7 @@ with gr.Blocks(title="Uplink") as demo:
         """
         # 🌐 Uplink
         **A unified search interface for the web and news.**
+        Github repository: [cappuch/uplink-mcp-hackathon](https://github.com/cappuch/uplink-mcp-hackathon)
         """
     )
 

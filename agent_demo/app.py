@@ -328,6 +328,8 @@ def create_demo():
             - 🔍 **Web search** (Google-like results)
             - 📰 **News search** (Latest articles)
             - 🌐 **Web scraping** (Extract content from URLs)
+
+            Github repository: [cappuch/uplink-mcp-hackathon](https://github.com/cappuch/uplink-mcp-hackathon)
             """
         )
         
@@ -398,7 +400,7 @@ def create_demo():
             """
             ---
             <div align="center">
-            <sub>Tools: Web Search • News Search • Web Scraping • Calculator</sub><br>
+            <sub>Tools: Web Search • News Search • Web Scraping</sub><br>
             <sub>ßPowered by Qwen 2.5-72B-Instruct via Nebius AI</sub><br>
             <sub>💡 Tip: Click the "Stop" button to cancel generation at any time</sub>
             </div>
